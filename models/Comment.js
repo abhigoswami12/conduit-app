@@ -6,7 +6,7 @@ var ObjectId = Schema.Types.ObjectId;
 
 var commentSchema = new Schema({
     body: { type: String },
-    // articleId: { type: ObjectId, required: true, ref: "Article" },
+    articleId: { type: ObjectId, required: true, ref: "Article" },
     // articleSlug: { type: String, required: true },
     author: { type: Schema.Types.ObjectId, required: true, ref: "User" }
 }, { timestamps: true })

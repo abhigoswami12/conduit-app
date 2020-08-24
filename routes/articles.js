@@ -17,7 +17,7 @@ router.post('/',auth.validateToken, async (req, res, next) => {
         // article.author = req.user.userId;
         // console.log(article)
         // res.json({ article: generateArticleFormat(article)})
-        res.json({ article })
+        res.json({ article: generateArticleFormat(article) })
     } catch (error) {
         next(error);
     }
@@ -28,10 +28,13 @@ router.post('/:slug/comments',auth.validateToken, async (req, res, next) => {
     var slug = req.params.slug;
     req.body.comment.author = req.user.userId;
         console.log("REQUESTED BODY", req.body);
-    console.log("REQUESTED USER", req.user)
+    console.log("REQUESTED USER", req.user);
+    var article = await Article.findOne({ slug });
+    console.log(article);
+    req.body.comment.articleId = article._id;
     try {
         var comment = await Comment.create(req.body.comment);
-        var article = await Article.findOneAndUpdate({ slug }, { $push: { comments: comment._id}});
+        await Article.findOneAndUpdate({ slug }, { $push: { comments: comment._id}});
         console.log(comment)
         // var populatedComment = await Comment.findOne({ author: req.user.userId}).populate("author").exec();
         var populatedComment = await Comment.findById(comment._id)
@@ -83,7 +86,7 @@ router.get('/', async (req, res, next) => {
             // console.log(articles);
             res.json({ articles });
         } else {
-            var articles = await Article.find().sort({ "createdAt": -1 }).populate('author', 'username bio image').exec();
+            var articles = await Article.find({}, "-_id -favourites -comments -favouritedBy").sort({ "createdAt": -1 }).populate('author', 'username bio image').exec();
             return res.json({ articles })
         }
         // console.log(user);
@@ -114,10 +117,10 @@ router.get('/:slug', async (req, res, next) => {
     // console.log(articleSlug);
     
     try {
-        var article = await Article.find({slug}).populate('author', '-_id bio image username following').exec();
+        var article = await Article.findOne({slug}).populate('author', '-_id bio image username following').exec();
         // console.log("ARTICLE", article)
         // res.json({ article: generateArticleFormat(article) });
-        res.json({article});
+        res.json({article : generateArticleFormat(article)});
     } catch (error) {
         next(error);
     }
@@ -158,7 +161,7 @@ router.put('/:slug',auth.validateToken, async(req, res, next) => {
             // article.description = req.body.article.description;
             // article.body = req.body.article.body;
             article.save();
-            res.json({ article })
+            res.json({ article: generateArticleFormat(article) });
 
         } else {
             res.json({msg: "you must be the author of the article to update it"})
@@ -179,6 +182,8 @@ router.delete('/:slug',auth.validateToken, async(req, res, next) => {
         // console.log("ARTICLE FOUND", article);
         if(article) {
             if(article.author.toString() === req.user.userId) {
+                var comments = await Comment.find({ _id: article.comments});
+                comments.forEach(comment => comment.remove());
                 article.remove();
                 res.json({ article });
             } else {
@@ -292,7 +297,12 @@ function generateArticleFormat(article) {
         description: article.description,
         body: article.body,
         tagList: article.tagList,
-        slug: article.slug
+        slug: article.slug,
+        favourited: article.favourited,
+        favouritesCount: article.favouritesCount,
+        author: article.author,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt
     }
 }
 
