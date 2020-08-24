@@ -14,8 +14,6 @@ var auth = require('../middlewares/auth');
 router.post('/', async function(req, res, next) {
   try {
     var user = await User.create(req.body.user);
-    // console.log("requested body", req.body)
-    // console.log(user)
     var token = await auth.generateToken(user);
     res.json({ user : generateUserFormat(user, token)});
   } catch (error) {
@@ -34,7 +32,6 @@ router.post('/login', async (req, res, next) => {
 
   try {
     var user = await User.findOne({ email });
-    console.log(user)
     if (!user) {
       return res.status(400).json({ msg: "email not registered" });
     }

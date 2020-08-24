@@ -10,7 +10,6 @@ router.get('/:username',auth.validateToken, async (req, res, next) => {
     var username = req.params.username;
     try {
         var user = await User.findOne({ username }, "-_id -password -email -followers -followings");
-        // console.log("USER", user);
         res.json({ user });
     } catch (error) {
         next(error);
@@ -21,14 +20,10 @@ router.get('/:username',auth.validateToken, async (req, res, next) => {
 //DOUBT: HOW TO REMOVE ID AND FOLLOWERS FROM RES.JSON
 router.post('/:username/follow', auth.validateToken, async(req, res, next) => {
     var username = req.params.username;
-    // console.log("REQUESTED USER",req.user)
     try {
         var loggedinUserId = req.user.userId;
-        // console.log(loggedinUserId);
         var loggedinUser = await User.findOne({ _id: loggedinUserId });
-        console.log("loggedinUser", loggedinUser);
         var userToBeUpdated = await User.findOne({ username });
-        console.log("userToBeUpdated", userToBeUpdated);
         var followersList = userToBeUpdated.followers;
         if(!followersList.includes(req.user.userId)) {
             userToBeUpdated.followers.push(req.user.userId);
@@ -38,7 +33,6 @@ router.post('/:username/follow', auth.validateToken, async(req, res, next) => {
         if(!loggedinUser.followings.includes(userToBeUpdated._id)) {
             loggedinUser.followings.push(userToBeUpdated._id);
             loggedinUser.save();
-            console.log("loggedinUser again", loggedinUser);
         }
         res.json({profile: userToBeUpdated});
 
@@ -50,15 +44,11 @@ router.post('/:username/follow', auth.validateToken, async(req, res, next) => {
 //unfollow
 router.delete('/:username/unfollow', auth.validateToken, async (req, res, next) => {
     var username = req.params.username;
-    console.log("REQUESTED USER",req.user)
     try {
         var loggedinUserId = req.user.userId;
-        // console.log(loggedinUserId)
         var loggedinUser = await User.findOne({ _id: loggedinUserId });
-        console.log("loggedinUser", loggedinUser);
         var userToBeUpdated = await User.findOne({ username });
         
-        console.log("userToBeUpdated", userToBeUpdated);
         var followersList = userToBeUpdated.followers;
         if (followersList.includes(req.user.userId)) {
             userToBeUpdated.followers.pull(req.user.userId);
@@ -69,7 +59,6 @@ router.delete('/:username/unfollow', auth.validateToken, async (req, res, next) 
         if (loggedinUser.followings.includes(userToBeUpdated._id)) {
             loggedinUser.followings.pull(userToBeUpdated._id);
             loggedinUser.save();
-            console.log("loggedinUser again", loggedinUser);
         }
         res.json({profile: userToBeUpdated});
 

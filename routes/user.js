@@ -4,10 +4,8 @@ var User = require('../models/User');
 var auth = require('../middlewares/auth');
 
 router.get('/', auth.validateToken, async (req, res, next) => {
-    console.log(req.user)
     var userId = req.user.userId;
     var token = req.user.token;
-    // console.log(userId);
     try {
         var user = await User.findOne({ _id: userId })
         res.json({ user :  generateUserFormat(user, token)});
@@ -19,11 +17,9 @@ router.get('/', auth.validateToken, async (req, res, next) => {
 
 
 router.put('/', auth.validateToken, async (req, res, next) => {
-    // console.log("requested body",req.body.user)
     var token = req.user.token;
     try {
         var updatedUser = await User.findByIdAndUpdate(req.user.userId, req.body.user);
-        // console.log(updatedUser);
         return res.json({ user: generateUserFormat(updatedUser, token)})
     } catch (error) {
         next(error)
